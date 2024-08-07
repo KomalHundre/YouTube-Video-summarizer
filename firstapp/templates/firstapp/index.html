@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: hsl(209, 60%, 83%);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    color: #810d0d;
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+form {
+    margin-bottom: 30px;
+}
+
+form div {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    color: #555555;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button {
+    background-color: #007bff;
+    color: #ffffff;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+h2 {
+    color: #333333;
+    margin-top: 30px;
+    font-size: 24px;
+}
+
+p {
+    color: #555555;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #cccccc;
+    text-align: left;
+    font-size: 16px;
+}
+
+#transcription,
+#summary,
+#detected_language {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    </style>
+    <title>Transcription Service</title>
+    <script>
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Function to send transcription request and handle response
+        async function transcribe() {
+            const url = document.getElementById('url').value;
+            const language = document.getElementById('language').value;
+            const csrftoken = getCookie('csrftoken');
+
+            // Fetch request to server
+            const response = await fetch('/transcribe/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ url, language }),
+            });
+
+            // Handle response
+            const result = await response.json();
+            console.log("Server response:", result); // Log the entire response
+
+            if (response.ok) {
+                document.getElementById('transcription').innerText = result.transcription || 'No transcription available';
+                document.getElementById('summary').innerText = result.summary || 'No summary available';
+                document.getElementById('detected_language').innerText = result.detected_language || 'No language detected';
+                console.log("Transcription:", result.transcription); // Log the transcription
+            
+            } else {
+                alert(result.error || 'An error occurred');
+                console.log("Error:", result.error); // Log the error
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Video Summarizer</h1>
+        <form onsubmit="event.preventDefault(); transcribe();">
+            <div>
+                <label for="url">YouTube URL:</label>
+                <input type="text" id="url" name="url">
+            </div>
+            <div>
+                <label for="language">Language Code:</label>
+                <input type="text" id="language" name="language">
+            </div>
+            <button type="submit">Transcribe</button>
+        </form>
+        <h2>Transcription</h2>
+        <p id="transcription">No transcription available</p>
+     <h2>Summary</h2>
+        <p id="summary">No summary available</p>
+    </div>
+</body>
+</html>
